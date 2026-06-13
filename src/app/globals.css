@@ -1,0 +1,271 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    --brand-black: #020204;
+    --brand-ink: #070710;
+    --brand-card: #090b18;
+    --brand-navy: #202885;
+    --brand-blue: #3154ff;
+    --brand-sky: #7eadf7;
+    --brand-cyan: #12e4c7;
+    --brand-green: #05c864;
+    --brand-lime: #b8f000;
+    --brand-yellow: #efff32;
+    --brand-orange: #ff4011;
+    --brand-red: #ee1408;
+    --brand-burgundy: #821012;
+    --brand-purple: #7200ef;
+    --brand-lavender: #a77cf5;
+    --brand-pink: #e91862;
+    --brand-mint: #5ff0ce;
+    --brand-white: #f8fafc;
+  }
+  html {
+    font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    min-height: 100dvh;
+    color: var(--brand-white);
+    background:
+      radial-gradient(circle at 12% 0%, rgb(114 0 239 / 0.35), transparent 28rem),
+      radial-gradient(circle at 90% 8%, rgb(49 84 255 / 0.32), transparent 24rem),
+      radial-gradient(circle at 8% 82%, rgb(5 200 100 / 0.22), transparent 24rem),
+      linear-gradient(135deg, var(--brand-black) 0%, #050612 44%, #0a0310 100%);
+  }
+  * { box-sizing: border-box; }
+}
+
+@layer components {
+  .font-display {
+    font-family: var(--font-barlow), system-ui, sans-serif;
+  }
+
+  .glass {
+    position: relative;
+    background:
+      linear-gradient(135deg, rgb(255 255 255 / 0.09), rgb(255 255 255 / 0.03)),
+      rgb(7 7 16 / 0.88);
+    border: 1px solid rgb(255 255 255 / 0.12);
+    box-shadow: 0 20px 70px rgb(0 0 0 / 0.28);
+  }
+
+  @supports (backdrop-filter: blur(1px)) {
+    .glass {
+      background:
+        linear-gradient(135deg, rgb(255 255 255 / 0.1), rgb(255 255 255 / 0.035)),
+        rgb(7 7 16 / 0.62);
+      backdrop-filter: blur(18px) saturate(140%);
+    }
+  }
+
+  .brand-shell {
+    background:
+      radial-gradient(circle at 16% 4%, rgb(114 0 239 / 0.26), transparent 20rem),
+      radial-gradient(circle at 88% 10%, rgb(18 228 199 / 0.16), transparent 18rem),
+      linear-gradient(180deg, rgb(0 0 0 / 0.2), rgb(0 0 0 / 0.42));
+  }
+
+  .brand-header {
+    background:
+      linear-gradient(90deg, rgb(7 7 16 / 0.96), rgb(32 40 133 / 0.62), rgb(7 7 16 / 0.94));
+    border-color: rgb(255 255 255 / 0.12);
+    box-shadow: 0 18px 60px rgb(0 0 0 / 0.36);
+  }
+
+  .brand-pattern {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .brand-pattern::before,
+  .brand-pattern::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .brand-pattern::before {
+    inset: -38% -24% auto auto;
+    width: 18rem;
+    height: 18rem;
+    border-radius: 999px 999px 999px 0;
+    background:
+      conic-gradient(from 90deg, var(--brand-red), var(--brand-orange), var(--brand-lime), var(--brand-cyan), var(--brand-blue), var(--brand-purple), var(--brand-red));
+    opacity: 0.22;
+    filter: blur(0.5px);
+  }
+
+  .brand-pattern::after {
+    right: -3.5rem;
+    bottom: -4.75rem;
+    width: 12rem;
+    height: 8rem;
+    border-radius: 4rem 0 0 4rem;
+    background:
+      linear-gradient(90deg, transparent 0 20%, rgb(126 173 247 / 0.32) 20% 46%, rgb(238 20 8 / 0.42) 46% 73%, rgb(18 228 199 / 0.32) 73%);
+    opacity: 0.7;
+  }
+
+  .stage-banner-surface {
+    background:
+      linear-gradient(90deg, rgb(7 7 16 / 0.28), rgb(32 40 133 / 0.2) 58%, rgb(7 7 16 / 0.08));
+  }
+
+  .stage-banner-surface > :not(.stage-banner-corner) {
+    position: relative;
+    z-index: 1;
+  }
+
+  .stage-banner-surface::before {
+    inset: -40% -18% auto auto;
+    width: 16rem;
+    height: 16rem;
+    opacity: 0.12;
+  }
+
+  .stage-banner-surface::after {
+    display: none;
+  }
+
+  .stage-banner-corner {
+    position: absolute;
+    inset: 0 0 auto auto;
+    z-index: 0;
+    width: clamp(13.5rem, 48vw, 21rem);
+    height: 100%;
+    min-height: 6.25rem;
+    overflow: hidden;
+    pointer-events: none;
+    opacity: 0.92;
+    transform: translateX(0.35rem);
+    mask-image: linear-gradient(90deg, transparent 0%, rgb(0 0 0 / 0.15) 12%, black 30%);
+  }
+
+  .stage-banner-corner::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(90deg, transparent, rgb(255 255 255 / 0.12), transparent 72%),
+      radial-gradient(circle at 68% 18%, rgb(255 255 255 / 0.18), transparent 1.8rem);
+    mix-blend-mode: screen;
+    pointer-events: none;
+  }
+
+  .stage-banner-corner__tile {
+    position: absolute;
+    display: block;
+  }
+
+  .stage-banner-corner__tile--lime {
+    top: 0;
+    left: 0;
+    width: 24%;
+    height: 56%;
+    background: var(--brand-lime);
+    border-bottom-right-radius: 4.5rem;
+  }
+
+  .stage-banner-corner__tile--violet {
+    top: 0;
+    left: 7%;
+    width: 42%;
+    height: 100%;
+    background: var(--brand-purple);
+    border-top-left-radius: 4.5rem;
+    border-bottom-right-radius: 5.25rem;
+  }
+
+  .stage-banner-corner__tile--navy {
+    top: -52%;
+    left: 33%;
+    width: 45%;
+    aspect-ratio: 1;
+    background: var(--brand-navy);
+    border-radius: 999px;
+  }
+
+  .stage-banner-corner__tile--blue {
+    top: 0;
+    right: 0;
+    width: 57%;
+    height: 56%;
+    background: var(--brand-blue);
+    border-bottom-left-radius: 5.25rem;
+  }
+
+  .stage-banner-corner__tile--mint {
+    right: 36%;
+    bottom: 0;
+    width: 38%;
+    height: 58%;
+    background: var(--brand-mint);
+    border-top-right-radius: 5.5rem;
+  }
+
+  .stage-banner-corner__tile--red {
+    right: 0;
+    bottom: 0;
+    width: 48%;
+    height: 58%;
+    background: var(--brand-red);
+    border-top-left-radius: 5.5rem;
+  }
+
+  .tournament-card {
+    position: relative;
+    overflow: hidden;
+    background:
+      linear-gradient(135deg, rgb(255 255 255 / 0.1), rgb(255 255 255 / 0.025)),
+      linear-gradient(180deg, rgb(7 7 16 / 0.98), rgb(10 10 28 / 0.9));
+    border: 1px solid rgb(255 255 255 / 0.13);
+    box-shadow: 0 18px 60px rgb(0 0 0 / 0.3);
+  }
+
+  .tournament-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 100% 0%, rgb(184 240 0 / 0.16), transparent 9rem);
+  }
+
+  .brand-chip {
+    background: linear-gradient(90deg, var(--brand-red), var(--brand-orange), var(--brand-blue), var(--brand-cyan));
+    box-shadow: 0 0 28px rgb(49 84 255 / 0.24);
+  }
+
+  .brand-accent-text {
+    color: transparent;
+    background: linear-gradient(90deg, var(--brand-yellow), var(--brand-cyan), var(--brand-sky));
+    background-clip: text;
+    -webkit-background-clip: text;
+  }
+
+}
+
+@keyframes pulse-ring {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.animate-pulse { animation: pulse-ring 1.5s ease-in-out infinite; }
+
+@keyframes brand-sweep {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+.animate-brand-sweep {
+  background-size: 200% 100%;
+  animation: brand-sweep 6s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-brand-sweep,
+  .animate-pulse { animation: none; }
+}
