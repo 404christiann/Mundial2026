@@ -1,6 +1,7 @@
 import { fetchFootball } from './client';
 import { withTtlCache } from './cache';
 import { MATCHES_TTL_MS, STANDINGS_TTL_MS } from '@/lib/constants';
+import { venueCity, fixtureVenue } from '@/lib/venues';
 import type { RawStatus, RawTeam, RawMatch, RawMatchesResponse, RawStandingsResponse } from '@/types/football';
 import type { MatchStatus, Team, Match, GroupId } from '@/types/domain';
 
@@ -52,7 +53,8 @@ export function normalizeMatch(raw: RawMatch): Match {
     stage: raw.stage,
     matchday: raw.matchday,
     group: parseGroupId(raw.group),
-    venue: normalizeVenue(raw.venue),
+    venue: normalizeVenue(raw.venue) ?? fixtureVenue(raw.homeTeam.name ?? '', raw.awayTeam.name ?? '')?.venue ?? null,
+    city: venueCity(normalizeVenue(raw.venue)) ?? fixtureVenue(raw.homeTeam.name ?? '', raw.awayTeam.name ?? '')?.city ?? null,
     homeTeam: normalizeTeam(raw.homeTeam),
     awayTeam: normalizeTeam(raw.awayTeam),
     fullTime: { home: raw.score.fullTime.home, away: raw.score.fullTime.away },

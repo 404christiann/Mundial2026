@@ -139,6 +139,43 @@ describe('normalizeMatch', () => {
     expect(normalizeMatch(raw).venue).toBeNull();
   });
 
+  it('derives city from a known venue', () => {
+    const raw = makeRawMatch({ venue: 'MetLife Stadium' });
+    expect(normalizeMatch(raw).city).toBe('East Rutherford');
+  });
+
+  it('derives city null for an unknown venue', () => {
+    const raw = makeRawMatch({ venue: 'Unknown Arena' });
+    expect(normalizeMatch(raw).city).toBeNull();
+  });
+
+  it('derives venue and city from fixture lookup when API venue is null', () => {
+    const raw = makeRawMatch({
+      venue: null,
+      homeTeam: makeRawTeam({ name: 'Brazil' }),
+      awayTeam: makeRawTeam({ id: 2, name: 'Morocco' }),
+    });
+    const match = normalizeMatch(raw);
+    expect(match.venue).toBe('MetLife Stadium');
+    expect(match.city).toBe('East Rutherford');
+  });
+
+  it('handles team name aliases in fixture lookup (Ivory Coast API variant)', () => {
+    const raw = makeRawMatch({
+      venue: null,
+      homeTeam: makeRawTeam({ name: "Côte d'Ivoire" }),
+      awayTeam: makeRawTeam({ id: 2, name: 'Ecuador' }),
+    });
+    const match = normalizeMatch(raw);
+    expect(match.venue).toBe('Lincoln Financial Field');
+    expect(match.city).toBe('Philadelphia');
+  });
+
+  it('derives city null when venue is null and teams not in fixture lookup', () => {
+    const raw = makeRawMatch({ venue: null });
+    expect(normalizeMatch(raw).city).toBeNull();
+  });
+
   it('maps fullTime scores correctly', () => {
     const raw = makeRawMatch({ score: { winner: 'HOME_TEAM', duration: 'REGULAR', fullTime: { home: 3, away: 1 }, halfTime: { home: 1, away: 0 } } });
     const match = normalizeMatch(raw);

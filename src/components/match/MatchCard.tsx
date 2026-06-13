@@ -53,7 +53,7 @@ export function MatchCard({ match, compact = false, showDate = false }: MatchCar
         </div>
         {match.venue && (
           <p className="pt-1 text-left text-[0.72rem] font-medium leading-tight text-sky-100/55" data-testid="match-venue">
-            {match.venue}
+            {match.venue}{match.city ? ` · ${match.city}` : ''}
           </p>
         )}
         <div className="pt-1 flex flex-col items-start gap-1">

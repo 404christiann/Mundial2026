@@ -92,6 +92,7 @@ export function makeMatch(overrides: Partial<Match> = {}): Match {
     matchday: 1,
     group: 'A',
     venue: 'Estadio Azteca',
+    city: null,
     homeTeam: makeTeam(),
     awayTeam: makeTeam({ id: 770, name: 'Poland', tla: 'POL' }),
     fullTime: makeScore(),

@@ -20,6 +20,7 @@ export interface Match {
   matchday: number | null;
   group: GroupId | null;
   venue: string | null;
+  city: string | null;
   homeTeam: Team;
   awayTeam: Team;
   fullTime: Score;

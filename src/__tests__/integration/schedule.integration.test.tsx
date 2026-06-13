@@ -35,8 +35,8 @@ afterEach(() => {
 describe('ScheduleView — DatePager renders correct date label', () => {
   it('displays a human-readable date label from the date prop', () => {
     render(<ScheduleView date="2026-06-13" initialMatches={[]} />);
-    // The date "2026-06-13" should format as something like "Sat, Jun 13"
-    const label = screen.getByText(/Jun 13/);
+    // DatePager shows "Today" when the prop matches the current date, otherwise "Sat, Jun 13"
+    const label = screen.getByText(/Jun 13|Today/);
     expect(label).toBeDefined();
   });
 

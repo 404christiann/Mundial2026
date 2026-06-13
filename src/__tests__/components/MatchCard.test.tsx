@@ -103,4 +103,16 @@ describe('MatchCard', () => {
     render(<MatchCard match={match} />);
     expect(screen.queryByTestId('match-venue')).not.toBeInTheDocument();
   });
+
+  it('renders venue and city together when both are present', () => {
+    const match = makeMatch({ venue: 'SoFi Stadium', city: 'Inglewood' });
+    render(<MatchCard match={match} />);
+    expect(screen.getByTestId('match-venue')).toHaveTextContent('SoFi Stadium · Inglewood');
+  });
+
+  it('renders venue only when city is null', () => {
+    const match = makeMatch({ venue: 'MetLife Stadium', city: null });
+    render(<MatchCard match={match} />);
+    expect(screen.getByTestId('match-venue')).toHaveTextContent('MetLife Stadium');
+  });
 });
