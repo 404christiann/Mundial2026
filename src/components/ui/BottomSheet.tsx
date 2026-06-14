@@ -28,7 +28,7 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
             role="dialog"
             aria-modal="true"
             aria-label={title}
-            className="brand-pattern fixed inset-x-0 bottom-0 z-50 max-h-[85dvh] rounded-t-[2rem] border border-white/15 bg-black/80 p-4 shadow-[0_-24px_70px_rgba(0,0,0,0.5)] backdrop-blur-xl max-w-2xl mx-auto"
+            className="fixed inset-x-0 bottom-0 z-50 max-h-[85dvh] rounded-t-[2rem] border border-white/15 bg-black/80 p-4 shadow-[0_-24px_70px_rgba(0,0,0,0.5)] backdrop-blur-xl max-w-2xl mx-auto"
             initial={reduce ? { opacity: 0 } : { y: '100%' }}
             animate={reduce ? { opacity: 1 } : { y: 0 }}
             exit={reduce ? { opacity: 0 } : { y: '100%' }}

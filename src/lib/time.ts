@@ -67,3 +67,19 @@ export function addDays(date: string, n: number): string {
   const dd = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${dd}`;
 }
+
+export function firstOfMonth(date: string): string {
+  const [year, month] = date.split('-');
+  return `${year}-${month}`;
+}
+
+export function daysInMonth(year: number, month: number): number {
+  // month is 1-indexed; new Date(y, m, 0) gives the last day of that month
+  return new Date(year, month, 0).getDate();
+}
+
+export function weekdayOfFirst(yearMonth: string): number {
+  // Returns 0=Sun, 1=Mon, …, 6=Sat — pure calendar math, no tz dependency
+  const [year, month] = yearMonth.split('-').map(Number);
+  return new Date(year, month - 1, 1).getDay();
+}

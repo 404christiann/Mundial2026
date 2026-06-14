@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatDateOnly, formatKickoff, formatTimeOnly, addDays, todayInTz, getLocalTimeZone } from '@/lib/time';
+import { formatDateOnly, formatKickoff, formatTimeOnly, addDays, todayInTz, getLocalTimeZone, firstOfMonth, daysInMonth, weekdayOfFirst } from '@/lib/time';
 
 const UTC_DATE = '2026-06-13T18:00:00Z';
 
@@ -136,5 +136,51 @@ describe('getLocalTimeZone', () => {
     const tz = getLocalTimeZone();
     // Valid IANA zones contain a slash (e.g. "America/New_York") or are "UTC"
     expect(tz === 'UTC' || tz.includes('/')).toBe(true);
+  });
+});
+
+describe('firstOfMonth', () => {
+  it('returns YYYY-MM from a full date', () => {
+    expect(firstOfMonth('2026-06-13')).toBe('2026-06');
+  });
+
+  it('works for dates at end of month', () => {
+    expect(firstOfMonth('2026-07-19')).toBe('2026-07');
+  });
+});
+
+describe('daysInMonth', () => {
+  it('returns 30 for June 2026', () => {
+    expect(daysInMonth(2026, 6)).toBe(30);
+  });
+
+  it('returns 31 for July 2026', () => {
+    expect(daysInMonth(2026, 7)).toBe(31);
+  });
+
+  it('returns 28 for February in a non-leap year', () => {
+    expect(daysInMonth(2025, 2)).toBe(28);
+  });
+
+  it('returns 29 for February in a leap year', () => {
+    expect(daysInMonth(2024, 2)).toBe(29);
+  });
+});
+
+describe('weekdayOfFirst', () => {
+  it('returns 1 (Monday) for June 2026', () => {
+    // June 1, 2026 is a Monday
+    expect(weekdayOfFirst('2026-06')).toBe(1);
+  });
+
+  it('returns 3 (Wednesday) for July 2026', () => {
+    // July 1, 2026 is a Wednesday
+    expect(weekdayOfFirst('2026-07')).toBe(3);
+  });
+
+  it('returns a value in 0–6', () => {
+    const result = weekdayOfFirst('2026-06');
+    expect(result).toBeGreaterThanOrEqual(0);
+    expect(result).toBeLessThanOrEqual(6);
   });
 });
