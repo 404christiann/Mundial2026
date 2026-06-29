@@ -42,6 +42,14 @@ export function normalizeVenue(raw: string | null): string | null {
   return venue ? venue : null;
 }
 
+function winnerFromScoreSide(score: { home: number | null; away: number | null } | undefined) {
+  if (!score || score.home == null || score.away == null || score.home === score.away) {
+    return null;
+  }
+
+  return score.home > score.away ? 'HOME' : 'AWAY';
+}
+
 export function normalizeMatch(raw: RawMatch): Match {
   const status = normalizeStatus(raw.status);
   const isLive = status === 'IN_PLAY';
@@ -50,6 +58,13 @@ export function normalizeMatch(raw: RawMatch): Match {
   if (raw.score.winner === 'HOME_TEAM') winner = 'HOME';
   else if (raw.score.winner === 'AWAY_TEAM') winner = 'AWAY';
   else if (raw.score.winner === 'DRAW') winner = 'DRAW';
+
+  if (status === 'FINISHED' && (winner === null || winner === 'DRAW')) {
+    winner = winnerFromScoreSide(raw.score.penalties)
+      ?? winnerFromScoreSide(raw.score.fullTime)
+      ?? winnerFromScoreSide(raw.score.extraTime)
+      ?? winner;
+  }
 
   return {
     id: raw.id,

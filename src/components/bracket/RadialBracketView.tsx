@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import type { BracketRound } from '@/types/domain';
 import { buildRadialBracketLayout, type RadialEdge, type RadialNode } from '@/lib/radialLayout';
@@ -70,6 +70,7 @@ export function RadialBracketView({ rounds }: RadialBracketViewProps) {
   const trophyWidth = trophyHeight * 0.41;
   const trophyYOffset = trophyHeight * 0.065;
   const haloSize = Math.max(64, layout.crestSize * 2.8);
+  const selectedNode = [...layout.crests, ...visibleParticipants].find(node => node.key === selectedNodeKey) ?? null;
 
   const toggleTooltip = (node: RadialNode) => {
     if (!node.team) return;
@@ -212,16 +213,25 @@ export function RadialBracketView({ rounds }: RadialBracketViewProps) {
 
               <div
                 aria-hidden="true"
-                className="absolute rounded-full blur-md"
+                className="absolute"
                 style={{
                   left: layout.center.x,
                   top: layout.center.y - trophyYOffset,
                   width: haloSize,
                   height: haloSize,
                   transform: 'translate(-50%, -50%)',
-                  background: 'radial-gradient(circle, rgba(255,209,102,0.45) 0%, rgba(255,209,102,0) 70%)',
                 }}
-              />
+              >
+                <motion.div
+                  className="h-full w-full rounded-full blur-md"
+                  style={{
+                    background: 'radial-gradient(circle, rgba(255,209,102,0.45) 0%, rgba(255,209,102,0) 70%)',
+                  }}
+                  initial={reduce ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.65 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: reduce ? 0 : 0.7, delay: reduce ? 0 : 0.08, ease: [0.16, 1, 0.3, 1] }}
+                />
+              </div>
               <div
                 aria-hidden="true"
                 className="absolute leading-none drop-shadow-[0_0_18px_rgba(255,209,102,0.75)]"
@@ -231,7 +241,7 @@ export function RadialBracketView({ rounds }: RadialBracketViewProps) {
                   transform: 'translate(-50%, -50%)',
                 }}
               >
-                <img
+                <motion.img
                   src="/assets/world-cup-trophy.png"
                   alt=""
                   className="object-contain drop-shadow-[0_0_18px_rgba(255,209,102,0.95)]"
@@ -239,6 +249,9 @@ export function RadialBracketView({ rounds }: RadialBracketViewProps) {
                     width: trophyWidth,
                     height: trophyHeight,
                   }}
+                  initial={reduce ? { opacity: 1, scale: 1, y: 0 } : { opacity: 0, scale: 0.82, y: trophyHeight * 0.08 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ duration: reduce ? 0 : 0.55, delay: reduce ? 0 : 0.18, ease: [0.16, 1, 0.3, 1] }}
                 />
               </div>
 
@@ -258,6 +271,10 @@ export function RadialBracketView({ rounds }: RadialBracketViewProps) {
                   {ring.label}
                 </motion.div>
               ))}
+
+              {selectedNode?.team && (
+                <TeamTooltip node={selectedNode} layoutSize={layout.size} />
+              )}
             </div>
           </>
         )}
@@ -305,15 +322,44 @@ function TeamTooltipButton({ node, selected, onToggle, labelClassName, compact =
           <span>{teamInitials(node.team.name, node.team.tla)}</span>
         )}
       </span>
-      {selected && (
-        <span
-          id={`${node.key}-tooltip`}
-          role="tooltip"
-          className={`absolute left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-full border border-cyan-200/30 bg-black/85 px-2 py-1 text-[0.62rem] font-bold uppercase tracking-[0.12em] text-cyan-100 shadow-[0_0_18px_rgba(18,228,199,0.25)] backdrop-blur-md ${compact ? '-top-8' : '-top-9'}`}
-        >
-          {node.team.name}
-        </span>
-      )}
     </button>
+  );
+}
+
+interface TeamTooltipProps {
+  node: RadialNode;
+  layoutSize: number;
+}
+
+function TeamTooltip({ node, layoutSize }: TeamTooltipProps) {
+  const tooltipRef = useRef<HTMLSpanElement | null>(null);
+  const [tooltipWidth, setTooltipWidth] = useState(0);
+
+  useLayoutEffect(() => {
+    const width = tooltipRef.current?.offsetWidth ?? 0;
+    setTooltipWidth(width);
+  }, [node.team?.name]);
+
+  if (!node.team) return null;
+
+  const halfWidth = (tooltipWidth || 74) / 2;
+  const left = Math.min(Math.max(node.x, halfWidth + 8), layoutSize - halfWidth - 8);
+  const showAbove = node.y > 56;
+  const top = showAbove ? node.y - node.size / 2 - 8 : node.y + node.size / 2 + 8;
+
+  return (
+    <span
+      ref={tooltipRef}
+      id={`${node.key}-tooltip`}
+      role="tooltip"
+      className="pointer-events-none absolute z-[80] whitespace-nowrap rounded-full border border-cyan-200/30 bg-black/90 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-[0.08em] text-cyan-100 shadow-[0_0_18px_rgba(18,228,199,0.25)] backdrop-blur-md"
+      style={{
+        left,
+        top,
+        transform: showAbove ? 'translate(-50%, -100%)' : 'translate(-50%, 0)',
+      }}
+    >
+      {node.team.name}
+    </span>
   );
 }

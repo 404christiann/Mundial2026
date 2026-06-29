@@ -16,6 +16,9 @@ export interface RawScore {
   duration: string;
   fullTime: RawScoreSide;
   halfTime: RawScoreSide;
+  regularTime?: RawScoreSide;
+  extraTime?: RawScoreSide;
+  penalties?: RawScoreSide;
 }
 
 export interface RawMatch {

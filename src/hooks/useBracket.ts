@@ -6,6 +6,7 @@ import { POLL_INTERVAL_MS } from '@/lib/constants';
 interface BracketResult {
   rounds: BracketRound[];
   isLive: boolean;
+  isTracking: boolean;
 }
 
 export function useBracket(initial: BracketRound[]): BracketResult {
@@ -14,6 +15,10 @@ export function useBracket(initial: BracketRound[]): BracketResult {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const isLive = rounds.some(r => r.matches.some(m => m.isLive));
+  const hasKnockoutMatches = rounds.some(r => r.matches.length > 0);
+  const isComplete = hasKnockoutMatches
+    && rounds.every(r => r.matches.every(m => m.status === 'FINISHED' || m.status === 'POSTPONED'));
+  const isTracking = hasKnockoutMatches && !isComplete;
 
   const runFetch = useCallback(async () => {
     if (document.visibilityState === 'hidden') return;
@@ -32,7 +37,7 @@ export function useBracket(initial: BracketRound[]): BracketResult {
   }, []);
 
   useEffect(() => {
-    if (!isLive) {
+    if (!isTracking) {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
@@ -49,7 +54,7 @@ export function useBracket(initial: BracketRound[]): BracketResult {
         intervalRef.current = null;
       }
     };
-  }, [isLive, runFetch]);
+  }, [isTracking, runFetch]);
 
-  return { rounds, isLive };
+  return { rounds, isLive, isTracking };
 }

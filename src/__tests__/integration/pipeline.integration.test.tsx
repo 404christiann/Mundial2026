@@ -9,6 +9,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { normalizeMatch } from '@/lib/football/endpoints';
 import { buildBracket } from '@/lib/bracket';
+import { buildRadialBracketLayout } from '@/lib/radialLayout';
 import { buildGroups } from '@/lib/standings';
 import { detectStage } from '@/lib/stage';
 import { MatchCard } from '@/components/match/MatchCard';
@@ -236,6 +237,81 @@ describe('Pipeline: raw knockout matches → buildBracket → BracketView', () =
     expect(match.isLive).toBe(true);
     expect(screen.queryByTestId('live-dot')).toBeNull();
     vi.unstubAllGlobals();
+  });
+
+  it('raw FINISHED R32 result projects the winner into the radial bracket before the API fills R16', () => {
+    const brazil = makeRawTeam({ id: 764, name: 'Brazil', shortName: 'Brazil', tla: 'BRA' });
+    const japan = makeRawTeam({ id: 766, name: 'Japan', shortName: 'Japan', tla: 'JPN' });
+    const finishedR32 = makeRawMatch({
+      id: 537423,
+      status: 'FINISHED',
+      stage: 'LAST_32',
+      group: null,
+      matchday: null,
+      homeTeam: brazil,
+      awayTeam: japan,
+      score: {
+        winner: 'HOME_TEAM',
+        duration: 'REGULAR',
+        fullTime: { home: 2, away: 1 },
+        halfTime: { home: 0, away: 1 },
+      },
+    });
+    const emptyR16 = makeRawMatch({
+      id: 537377,
+      status: 'TIMED',
+      stage: 'LAST_16',
+      group: null,
+      matchday: null,
+      homeTeam: { id: null, name: null, shortName: null, tla: null, crest: null },
+      awayTeam: { id: null, name: null, shortName: null, tla: null, crest: null },
+    });
+
+    const rounds = buildBracket([normalizeMatch(finishedR32), normalizeMatch(emptyR16)]);
+    const layout = buildRadialBracketLayout(rounds, 375);
+    const projectedBrazil = layout.participants.find(node => node.stage === 'ROUND_OF_16' && node.team?.name === 'Brazil');
+
+    expect(projectedBrazil).toBeDefined();
+    expect(projectedBrazil?.matchId).toBe(537377);
+  });
+
+  it('raw FINISHED penalty result projects Paraguay over Germany into the radial bracket', () => {
+    const germany = makeRawTeam({ id: 759, name: 'Germany', shortName: 'Germany', tla: 'GER' });
+    const paraguay = makeRawTeam({ id: 763, name: 'Paraguay', shortName: 'Paraguay', tla: 'PAR' });
+    const finishedR32 = makeRawMatch({
+      id: 537416,
+      status: 'FINISHED',
+      stage: 'LAST_32',
+      group: null,
+      matchday: null,
+      homeTeam: germany,
+      awayTeam: paraguay,
+      score: {
+        winner: 'DRAW',
+        duration: 'PENALTY_SHOOTOUT',
+        fullTime: { home: 1, away: 1 },
+        halfTime: { home: 0, away: 0 },
+        penalties: { home: 5, away: 6 },
+      },
+    });
+    const emptyR16 = makeRawMatch({
+      id: 537375,
+      status: 'TIMED',
+      stage: 'LAST_16',
+      group: null,
+      matchday: null,
+      homeTeam: { id: null, name: null, shortName: null, tla: null, crest: null },
+      awayTeam: { id: null, name: null, shortName: null, tla: null, crest: null },
+    });
+
+    const rounds = buildBracket([normalizeMatch(finishedR32), normalizeMatch(emptyR16)]);
+    const layout = buildRadialBracketLayout(rounds, 375);
+    const germanyOuter = layout.crests.find(node => node.team?.name === 'Germany');
+    const projectedParaguay = layout.participants.find(node => node.stage === 'ROUND_OF_16' && node.team?.name === 'Paraguay');
+
+    expect(germanyOuter?.isEliminated).toBe(true);
+    expect(projectedParaguay).toBeDefined();
+    expect(projectedParaguay?.matchId).toBe(537375);
   });
 });
 

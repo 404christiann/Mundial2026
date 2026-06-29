@@ -129,6 +129,53 @@ describe('BracketView radial renderer', () => {
 });
 
 describe('BracketView polling', () => {
+  it('moves a full-time winner into the next radial slot after a bracket refresh', async () => {
+    const brazil = { id: 764, name: 'Brazil', tla: 'BRA', crest: null };
+    const japan = { id: 766, name: 'Japan', tla: 'JPN', crest: null };
+    const emptyTeam = { id: null, name: 'TBD', tla: '', crest: null };
+    const initialR32 = makeMatch({
+      id: 537423,
+      stage: 'ROUND_OF_32',
+      group: null,
+      matchday: null,
+      status: 'TIMED',
+      isLive: false,
+      homeTeam: brazil,
+      awayTeam: japan,
+    });
+    const finishedR32 = makeFinishedMatch({
+      id: 537423,
+      stage: 'ROUND_OF_32',
+      group: null,
+      matchday: null,
+      homeTeam: brazil,
+      awayTeam: japan,
+      winner: 'HOME',
+      fullTime: { home: 2, away: 1 },
+    });
+    const emptyR16 = makeMatch({
+      id: 537377,
+      stage: 'ROUND_OF_16',
+      group: null,
+      matchday: null,
+      homeTeam: emptyTeam,
+      awayTeam: emptyTeam,
+    });
+    const updatedRounds = buildBracket([finishedR32, emptyR16]);
+
+    vi.spyOn(global, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ rounds: updatedRounds }), { status: 200 }),
+    );
+
+    render(<BracketView initialRounds={buildBracket([initialR32, emptyR16])} />);
+
+    expect(screen.getAllByText('BRA')).toHaveLength(1);
+
+    await act(async () => {});
+
+    expect(screen.getAllByText('BRA')).toHaveLength(2);
+  });
+
   it('polls /api/bracket when a live knockout match exists', async () => {
     const liveMatch = makeLiveMatch({
       id: 100,

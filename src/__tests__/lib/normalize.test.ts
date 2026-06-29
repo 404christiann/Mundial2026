@@ -99,6 +99,47 @@ describe('normalizeMatch', () => {
     expect(normalizeMatch(raw).winner).toBe('DRAW');
   });
 
+  it('infers the winner from finished penalty totals when score.winner is DRAW', () => {
+    const raw = makeRawMatch({
+      status: 'FINISHED',
+      score: {
+        winner: 'DRAW',
+        duration: 'PENALTY_SHOOTOUT',
+        fullTime: { home: 5, away: 6 },
+        halfTime: { home: 0, away: 0 },
+      },
+    });
+    expect(normalizeMatch(raw).winner).toBe('AWAY');
+  });
+
+  it('infers the winner from separate penalty totals when full-time is level', () => {
+    const raw = makeRawMatch({
+      status: 'FINISHED',
+      score: {
+        winner: 'DRAW',
+        duration: 'PENALTY_SHOOTOUT',
+        fullTime: { home: 1, away: 1 },
+        halfTime: { home: 0, away: 0 },
+        penalties: { home: 4, away: 2 },
+      },
+    });
+    expect(normalizeMatch(raw).winner).toBe('HOME');
+  });
+
+  it('infers the winner from extra-time totals when they are the decisive score bucket', () => {
+    const raw = makeRawMatch({
+      status: 'FINISHED',
+      score: {
+        winner: null,
+        duration: 'EXTRA_TIME',
+        fullTime: { home: 1, away: 1 },
+        halfTime: { home: 0, away: 0 },
+        extraTime: { home: 1, away: 2 },
+      },
+    });
+    expect(normalizeMatch(raw).winner).toBe('AWAY');
+  });
+
   it('maps score.winner null → null', () => {
     const raw = makeRawMatch({ score: { winner: null, duration: 'REGULAR', fullTime: { home: null, away: null }, halfTime: { home: null, away: null } } });
     expect(normalizeMatch(raw).winner).toBeNull();

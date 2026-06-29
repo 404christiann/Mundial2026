@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useBracket } from '@/hooks/useBracket';
-import { makeBracketRound, makeLiveMatch, makeFinishedMatch } from '../fixtures';
+import { makeBracketRound, makeLiveMatch, makeFinishedMatch, makeMatch } from '../fixtures';
 
 const POLL_MS = 60_000;
 
@@ -25,13 +25,22 @@ describe('useBracket', () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
-  it('does not poll when no matches are live', async () => {
+  it('does not poll when all knockout matches are complete', async () => {
     const initial = [
       makeBracketRound({ matches: [makeFinishedMatch({ id: 1, stage: 'ROUND_OF_32', matchday: null, group: null })] }),
     ];
     renderHook(() => useBracket(initial));
     await act(async () => { vi.advanceTimersByTime(POLL_MS * 3); });
     expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('polls while knockout matches are scheduled so full-time winners can move dynamically', async () => {
+    const initial = [
+      makeBracketRound({ matches: [makeMatch({ id: 1, status: 'TIMED', stage: 'ROUND_OF_32', matchday: null, group: null })] }),
+    ];
+    renderHook(() => useBracket(initial));
+    await act(async () => {});
+    expect(fetch).toHaveBeenCalledOnce();
   });
 
   it('starts polling immediately when a bracket match is IN_PLAY', async () => {
@@ -83,6 +92,7 @@ describe('useBracket', () => {
     await act(async () => {});
 
     expect(result.current.isLive).toBe(false);
+    expect(result.current.isTracking).toBe(false);
 
     const callCount = (fetch as ReturnType<typeof vi.fn>).mock.calls.length;
     await act(async () => { vi.advanceTimersByTime(POLL_MS * 3); });
@@ -103,12 +113,14 @@ describe('useBracket', () => {
     ];
     const { result } = renderHook(() => useBracket(initial));
     expect(result.current.isLive).toBe(false);
+    expect(result.current.isTracking).toBe(false);
   });
 
   it('isLive is false when rounds have no matches (pre-knockout)', () => {
     const initial = [makeBracketRound({ matches: [] })];
     const { result } = renderHook(() => useBracket(initial));
     expect(result.current.isLive).toBe(false);
+    expect(result.current.isTracking).toBe(false);
   });
 
   it('cleans up polling on unmount', async () => {
