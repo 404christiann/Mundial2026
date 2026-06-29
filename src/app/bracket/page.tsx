@@ -15,7 +15,7 @@ export default async function BracketPage() {
     <TabShell stageLabel={stageLabel}>
       <div className="px-2 py-4">
         <p className="px-2 mb-3 font-display text-xs font-bold uppercase tracking-[0.22em] text-sky-200/55">
-          Swipe to see all rounds
+          Knockout path
         </p>
         <BracketView initialRounds={rounds} />
       </div>

@@ -30,19 +30,17 @@ describe('BracketView — placeholder message', () => {
     expect(screen.getByText('Bracket fills in after the group stage')).toBeDefined();
   });
 
-  it('still shows all 6 round headers and 12 TBDs when all empty', () => {
+  it('still renders all radial ring labels and 32 TBD outer slots when all empty', () => {
     const rounds = buildBracket([]);
     render(<BracketView initialRounds={rounds} />);
 
-    expect(screen.getByText('Round of 32')).toBeDefined();
-    expect(screen.getByText('Round of 16')).toBeDefined();
-    expect(screen.getByText('Quarter Finals')).toBeDefined();
-    expect(screen.getByText('Semi Finals')).toBeDefined();
-    expect(screen.getByText('Third Place')).toBeDefined();
+    expect(screen.getByText('R32')).toBeDefined();
+    expect(screen.getByText('R16')).toBeDefined();
+    expect(screen.getByText('QF')).toBeDefined();
+    expect(screen.getByText('SF')).toBeDefined();
     expect(screen.getByText('Final')).toBeDefined();
 
-    const tbdEls = screen.getAllByText('TBD');
-    expect(tbdEls.length).toBe(12);
+    expect(screen.getAllByText('?')).toHaveLength(32);
   });
 
   it('does NOT show placeholder when at least 1 knockout match exists', () => {

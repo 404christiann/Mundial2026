@@ -197,33 +197,31 @@ describe('Pipeline: raw standings → buildGroups → GroupsView', () => {
 // ─── buildBracket pipeline ────────────────────────────────────────────────────
 
 describe('Pipeline: raw knockout matches → buildBracket → BracketView', () => {
-  it('normalized ROUND_OF_32 match appears in Round of 32 column', () => {
+  it('normalized ROUND_OF_32 match appears as outer radial crest nodes', () => {
     const raw = makeRawMatch({
       id: 100,
       stage: 'ROUND_OF_32',
       group: null,
-      homeTeam: makeRawTeam({ id: 800, name: 'Brazil' }),
-      awayTeam: makeRawTeam({ id: 801, name: 'France' }),
+      homeTeam: makeRawTeam({ id: 800, name: 'Brazil', tla: 'BRA' }),
+      awayTeam: makeRawTeam({ id: 801, name: 'France', tla: 'FRA' }),
     });
     const match = normalizeMatch(raw);
     const rounds = buildBracket([match]);
     render(<BracketView initialRounds={rounds} />);
-    // Both team names visible
-    expect(screen.getAllByText('Brazil').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('France').length).toBeGreaterThan(0);
-    // Other 5 rounds → 5 × 2 = 10 TBDs
-    expect(screen.getAllByText('TBD').length).toBe(10);
+
+    expect(screen.getAllByTestId('radial-crest')).toHaveLength(2);
+    expect(screen.getAllByTestId('radial-tbd')).toHaveLength(30);
   });
 
   it('GROUP_STAGE matches are excluded from bracket', () => {
     const groupMatch = normalizeMatch(makeRawMatch({ stage: 'GROUP_STAGE', group: 'GROUP_A' }));
     const rounds = buildBracket([groupMatch]);
-    // All rounds should be empty → 12 TBDs
     render(<BracketView initialRounds={rounds} />);
-    expect(screen.getAllByText('TBD').length).toBe(12);
+    expect(screen.getAllByTestId('radial-tbd')).toHaveLength(32);
   });
 
-  it('raw PAUSED knockout → IN_PLAY → LiveDot in BracketMatch', () => {
+  it('raw PAUSED knockout normalizes to IN_PLAY without adding live UI to the structural bracket', () => {
+    vi.stubGlobal('fetch', vi.fn());
     const raw = makeRawMatch({
       id: 100,
       status: 'PAUSED',
@@ -235,7 +233,9 @@ describe('Pipeline: raw knockout matches → buildBracket → BracketView', () =
     const match = normalizeMatch(raw);
     const rounds = buildBracket([match]);
     render(<BracketView initialRounds={rounds} />);
-    expect(screen.getByTestId('live-dot')).toBeDefined();
+    expect(match.isLive).toBe(true);
+    expect(screen.queryByTestId('live-dot')).toBeNull();
+    vi.unstubAllGlobals();
   });
 });
 

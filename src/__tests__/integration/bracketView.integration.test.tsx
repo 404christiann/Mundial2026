@@ -1,16 +1,14 @@
 /**
- * Integration: buildBracket → BracketView → BracketColumn → BracketMatch
+ * Integration: buildBracket -> BracketView -> RadialBracketView
  *
- * Tests that match data flows through the full bracket render pipeline:
- * buildBracket output → BracketView (via useBracket) → BracketColumn labels
- * → BracketMatch rendering (TBD slots, winner bold, LiveDot).
+ * Verifies that normalized bracket data flows into the radial renderer while
+ * preserving the existing live polling behavior from useBracket.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, fireEvent } from '@testing-library/react';
 import { BracketView } from '@/components/bracket/BracketView';
 import { buildBracket } from '@/lib/bracket';
-import { makeMatch, makeLiveMatch, makeFinishedMatch, makeBracketRound } from '../fixtures';
-import type { BracketRound } from '@/types/domain';
+import { makeFinishedMatch, makeLiveMatch, makeMatch } from '../fixtures';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn() }),
@@ -30,212 +28,143 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-// ─── All 6 round labels ───────────────────────────────────────────────────────
+describe('BracketView radial renderer', () => {
+  it('renders radial labels and the third-place placeholder from an empty bracket', () => {
+    render(<BracketView initialRounds={buildBracket([])} />);
 
-describe('BracketView — all 6 round labels from buildBracket', () => {
-  it('renders all 6 round labels when given an empty match list', () => {
-    const rounds = buildBracket([]);
-    render(<BracketView initialRounds={rounds} />);
-    expect(screen.getByText('Round of 32')).toBeDefined();
-    expect(screen.getByText('Round of 16')).toBeDefined();
-    expect(screen.getByText('Quarter Finals')).toBeDefined();
-    expect(screen.getByText('Semi Finals')).toBeDefined();
+    expect(screen.getByTestId('radial-bracket')).toBeDefined();
+    expect(screen.getByText('R32')).toBeDefined();
+    expect(screen.getByText('R16')).toBeDefined();
+    expect(screen.getByText('QF')).toBeDefined();
+    expect(screen.getByText('SF')).toBeDefined();
+    expect(screen.getByText('Final')).toBeDefined();
     expect(screen.getByText('Third Place')).toBeDefined();
-    expect(screen.getByText('Final')).toBeDefined();
+    expect(screen.getByText('Third place match - TBD')).toBeDefined();
   });
 
-  it('renders all 6 round labels when rounds are passed directly', () => {
-    const rounds: BracketRound[] = [
-      makeBracketRound({ stage: 'ROUND_OF_32', label: 'Round of 32', matches: [] }),
-      makeBracketRound({ stage: 'ROUND_OF_16', label: 'Round of 16', matches: [] }),
-      makeBracketRound({ stage: 'QUARTER_FINALS', label: 'Quarter Finals', matches: [] }),
-      makeBracketRound({ stage: 'SEMI_FINALS', label: 'Semi Finals', matches: [] }),
-      makeBracketRound({ stage: 'THIRD_PLACE', label: 'Third Place', matches: [] }),
-      makeBracketRound({ stage: 'FINAL', label: 'Final', matches: [] }),
-    ];
-    render(<BracketView initialRounds={rounds} />);
-    expect(screen.getByText('Round of 32')).toBeDefined();
-    expect(screen.getByText('Final')).toBeDefined();
-  });
-});
+  it('renders 32 outer TBD placeholders when no knockout teams exist', () => {
+    render(<BracketView initialRounds={buildBracket([])} />);
 
-// ─── TBD slots ───────────────────────────────────────────────────────────────
-
-describe('BracketView → BracketColumn → BracketMatch — TBD slots', () => {
-  it('shows TBD slots in all empty rounds from an empty bracket', () => {
-    const rounds = buildBracket([]);
-    render(<BracketView initialRounds={rounds} />);
-    const tbdEls = screen.getAllByText('TBD');
-    // 6 rounds × 2 TBD divs each = 12
-    expect(tbdEls.length).toBe(12);
+    expect(screen.getAllByTestId('radial-tbd')).toHaveLength(32);
   });
 
-  it('shows TBD for a round with no matches, real matches for round with data', () => {
+  it('renders real R32 crest nodes and keeps missing slots as TBD', () => {
     const r32Match = makeMatch({
       id: 100,
       stage: 'ROUND_OF_32',
       group: null,
+      matchday: null,
       homeTeam: { id: 800, name: 'Argentina', tla: 'ARG', crest: null },
       awayTeam: { id: 801, name: 'Portugal', tla: 'POR', crest: null },
     });
-    const rounds = buildBracket([r32Match]);
-    render(<BracketView initialRounds={rounds} />);
-    // R32 has a real match
-    expect(screen.getAllByText('Argentina').length).toBeGreaterThan(0);
-    // R16 through FINAL should be TBD (5 rounds × 2 = 10)
-    expect(screen.getAllByText('TBD').length).toBe(10);
-  });
-});
 
-// ─── Winner highlighting ──────────────────────────────────────────────────────
+    render(<BracketView initialRounds={buildBracket([r32Match])} />);
 
-describe('BracketView → BracketMatch — winner highlighting', () => {
-  it('applies "winner" class to the home team when home wins', () => {
-    const match = makeFinishedMatch({
-      id: 100,
-      stage: 'FINAL',
-      group: null,
-      homeTeam: { id: 800, name: 'Argentina', tla: 'ARG', crest: null },
-      awayTeam: { id: 801, name: 'France', tla: 'FRA', crest: null },
-      winner: 'HOME',
-    });
-    const rounds = buildBracket([match]);
-    render(<BracketView initialRounds={rounds} />);
-    const argentinaEl = screen.getByText('Argentina');
-    expect(argentinaEl.className).toContain('text-yellow-200');
+    expect(screen.getAllByTestId('radial-crest')).toHaveLength(2);
+    expect(screen.getAllByTestId('radial-tbd')).toHaveLength(30);
+    expect(screen.getByText('ARG')).toBeDefined();
+    expect(screen.getByText('POR')).toBeDefined();
   });
 
-  it('highlights winning team when away wins', () => {
-    const match = makeFinishedMatch({
+  it('shows advanced teams on inner rings when the next-round slot is known', () => {
+    const canada = { id: 828, name: 'Canada', tla: 'CAN', crest: null };
+    const r32Match = makeFinishedMatch({
       id: 100,
-      stage: 'FINAL',
+      stage: 'ROUND_OF_32',
       group: null,
-      homeTeam: { id: 800, name: 'Argentina', tla: 'ARG', crest: null },
-      awayTeam: { id: 801, name: 'France', tla: 'FRA', crest: null },
+      matchday: null,
+      homeTeam: { id: 774, name: 'South Africa', tla: 'RSA', crest: null },
+      awayTeam: canada,
       winner: 'AWAY',
-      fullTime: { home: 0, away: 1 },
     });
-    const rounds = buildBracket([match]);
-    render(<BracketView initialRounds={rounds} />);
-    const franceEl = screen.getByText('France');
-    expect(franceEl.className).toContain('text-yellow-200');
-    const argentinaEl = screen.getByText('Argentina');
-    expect(argentinaEl.className).not.toContain('text-yellow-200');
+    const r16Match = makeMatch({
+      id: 200,
+      stage: 'ROUND_OF_16',
+      group: null,
+      matchday: null,
+      homeTeam: canada,
+      awayTeam: { id: null, name: 'TBD', tla: '', crest: null },
+    });
+
+    render(<BracketView initialRounds={buildBracket([r32Match, r16Match])} />);
+
+    expect(screen.getAllByTestId('radial-participant')).toHaveLength(1);
+    expect(screen.getAllByText('CAN')).toHaveLength(2);
   });
 
-  it('renders fullTime scores for a finished knockout match', () => {
-    const match = makeFinishedMatch({
+  it('shows a themed country tooltip when a nation icon is clicked', async () => {
+    const r32Match = makeMatch({
       id: 100,
-      stage: 'FINAL',
+      stage: 'ROUND_OF_32',
       group: null,
+      matchday: null,
       homeTeam: { id: 800, name: 'Argentina', tla: 'ARG', crest: null },
-      awayTeam: { id: 801, name: 'France', tla: 'FRA', crest: null },
-      fullTime: { home: 3, away: 2 },
-      winner: 'HOME',
+      awayTeam: { id: 801, name: 'Portugal', tla: 'POR', crest: null },
     });
-    const rounds = buildBracket([match]);
-    render(<BracketView initialRounds={rounds} />);
-    expect(screen.getByText('3')).toBeDefined();
-    expect(screen.getByText('2')).toBeDefined();
+
+    render(<BracketView initialRounds={buildBracket([r32Match])} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Argentina' }));
+    expect(screen.getByRole('tooltip')).toHaveTextContent('Argentina');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Argentina' }));
+    expect(screen.queryByRole('tooltip')).toBeNull();
   });
-});
 
-// ─── LiveDot in bracket ───────────────────────────────────────────────────────
-
-describe('BracketView → BracketMatch → LiveDot', () => {
-  it('shows LiveDot for a live knockout match', () => {
-    const match = makeLiveMatch({
-      id: 100,
-      stage: 'SEMI_FINALS',
+  it('renders the third-place match below the radial canvas when available', () => {
+    const thirdPlace = makeMatch({
+      id: 200,
+      stage: 'THIRD_PLACE',
       group: null,
+      matchday: null,
       homeTeam: { id: 800, name: 'Spain', tla: 'ESP', crest: null },
       awayTeam: { id: 801, name: 'England', tla: 'ENG', crest: null },
     });
-    const rounds = buildBracket([match]);
-    render(<BracketView initialRounds={rounds} />);
-    expect(screen.getByTestId('live-dot')).toBeDefined();
-  });
 
-  it('does NOT show LiveDot for a finished knockout match', () => {
-    const match = makeFinishedMatch({
-      id: 100,
-      stage: 'SEMI_FINALS',
-      group: null,
-      homeTeam: { id: 800, name: 'Spain', tla: 'ESP', crest: null },
-      awayTeam: { id: 801, name: 'England', tla: 'ENG', crest: null },
-    });
-    const rounds = buildBracket([match]);
-    render(<BracketView initialRounds={rounds} />);
-    expect(screen.queryByTestId('live-dot')).toBeNull();
+    render(<BracketView initialRounds={buildBracket([thirdPlace])} />);
+
+    expect(screen.getByText('Spain')).toBeDefined();
+    expect(screen.getByText('England')).toBeDefined();
   });
 });
 
-// ─── Bracket round ordering ───────────────────────────────────────────────────
-
-describe('buildBracket → BracketView — round ordering preserved', () => {
-  it('renders rounds in canonical order R32 → R16 → QF → SF → 3rd → Final', () => {
-    const rounds = buildBracket([]);
-    render(<BracketView initialRounds={rounds} />);
-    const headers = screen
-      .getAllByRole('heading', { level: 3 })
-      .map(h => h.textContent?.trim());
-    expect(headers).toEqual([
-      'Round of 32',
-      'Round of 16',
-      'Quarter Finals',
-      'Semi Finals',
-      'Third Place',
-      'Final',
-    ]);
-  });
-});
-
-// ─── Polling integration ─────────────────────────────────────────────────────
-
-describe('BracketView — polling via useBracket', () => {
+describe('BracketView polling', () => {
   it('polls /api/bracket when a live knockout match exists', async () => {
     const liveMatch = makeLiveMatch({
       id: 100,
       stage: 'QUARTER_FINALS',
       group: null,
-      homeTeam: { id: 800, name: 'Spain', tla: 'ESP', crest: null },
-      awayTeam: { id: 801, name: 'England', tla: 'ENG', crest: null },
+      matchday: null,
     });
     const finishedMatch = makeFinishedMatch({
       id: 100,
       stage: 'QUARTER_FINALS',
       group: null,
-      homeTeam: { id: 800, name: 'Spain', tla: 'ESP', crest: null },
-      awayTeam: { id: 801, name: 'England', tla: 'ENG', crest: null },
+      matchday: null,
     });
     const updatedRounds = buildBracket([finishedMatch]);
     vi.spyOn(global, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ rounds: updatedRounds }), { status: 200 }),
     );
 
-    const rounds = buildBracket([liveMatch]);
-    render(<BracketView initialRounds={rounds} />);
+    render(<BracketView initialRounds={buildBracket([liveMatch])} />);
 
-    // Flush the immediate runFetch() that fires when isLive=true
     await act(async () => {});
 
     expect(fetch).toHaveBeenCalledWith('/api/bracket');
-    expect(screen.queryByTestId('live-dot')).toBeNull();
   });
 
-  it('does NOT poll when all matches are finished', () => {
+  it('does not poll when all matches are finished', () => {
     const finished = makeFinishedMatch({
       id: 100,
       stage: 'FINAL',
       group: null,
-      homeTeam: { id: 800, name: 'Spain', tla: 'ESP', crest: null },
-      awayTeam: { id: 801, name: 'England', tla: 'ENG', crest: null },
+      matchday: null,
     });
     const mockFetch = vi.fn();
     vi.stubGlobal('fetch', mockFetch);
 
-    const rounds = buildBracket([finished]);
-    render(<BracketView initialRounds={rounds} />);
+    render(<BracketView initialRounds={buildBracket([finished])} />);
 
     vi.advanceTimersByTime(120_000);
     expect(mockFetch).not.toHaveBeenCalled();
