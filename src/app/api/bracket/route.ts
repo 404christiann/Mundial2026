@@ -3,16 +3,17 @@ import { FootballApiError } from '@/lib/football/client';
 import { normalizeMatch } from '@/lib/football/endpoints';
 import { withTtlCache } from '@/lib/football/cache';
 import { buildBracket } from '@/lib/bracket';
-import { MATCHES_TTL_MS } from '@/lib/constants';
+import { MATCHES_TTL_MS, TOURNAMENT_START, TOURNAMENT_END } from '@/lib/constants';
 import type { RawMatchesResponse } from '@/types/football';
 
 const BASE_URL = 'https://api.football-data.org/v4';
 
 async function fetchAllMatches(): Promise<RawMatchesResponse> {
   const token = process.env.FOOTBALL_DATA_API_TOKEN ?? '';
-  const res = await fetch(`${BASE_URL}/competitions/WC/matches`, {
-    headers: { 'X-Auth-Token': token },
-  });
+  const res = await fetch(
+    `${BASE_URL}/competitions/WC/matches?dateFrom=${TOURNAMENT_START}&dateTo=${TOURNAMENT_END}`,
+    { headers: { 'X-Auth-Token': token } },
+  );
 
   if (!res.ok) {
     const retryAfter = res.headers.get('Retry-After');

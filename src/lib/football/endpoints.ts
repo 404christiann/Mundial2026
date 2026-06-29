@@ -1,9 +1,15 @@
 import { fetchFootball } from './client';
 import { withTtlCache } from './cache';
-import { MATCHES_TTL_MS, STANDINGS_TTL_MS } from '@/lib/constants';
-import { venueCity, fixtureVenue } from '@/lib/venues';
+import { MATCHES_TTL_MS, STANDINGS_TTL_MS, TOURNAMENT_START, TOURNAMENT_END } from '@/lib/constants';
+import { venueCity, fixtureVenue, matchVenue } from '@/lib/venues';
 import type { RawStatus, RawTeam, RawMatch, RawMatchesResponse, RawStandingsResponse } from '@/types/football';
-import type { MatchStatus, Team, Match, GroupId } from '@/types/domain';
+import type { MatchStatus, Team, Match, GroupId, Stage } from '@/types/domain';
+
+function normalizeStage(raw: string): Stage {
+  if (raw === 'LAST_32') return 'ROUND_OF_32';
+  if (raw === 'LAST_16') return 'ROUND_OF_16';
+  return raw as Stage;
+}
 
 export function normalizeStatus(raw: RawStatus): MatchStatus {
   if (raw === 'PAUSED') return 'IN_PLAY';
@@ -50,11 +56,11 @@ export function normalizeMatch(raw: RawMatch): Match {
     utcDate: raw.utcDate,
     status,
     isLive,
-    stage: raw.stage,
+    stage: normalizeStage(raw.stage),
     matchday: raw.matchday,
     group: parseGroupId(raw.group),
-    venue: normalizeVenue(raw.venue) ?? fixtureVenue(raw.homeTeam.name ?? '', raw.awayTeam.name ?? '')?.venue ?? null,
-    city: venueCity(normalizeVenue(raw.venue)) ?? fixtureVenue(raw.homeTeam.name ?? '', raw.awayTeam.name ?? '')?.city ?? null,
+    venue: normalizeVenue(raw.venue) ?? fixtureVenue(raw.homeTeam.name ?? '', raw.awayTeam.name ?? '')?.venue ?? matchVenue(raw.id)?.venue ?? null,
+    city: venueCity(normalizeVenue(raw.venue)) ?? fixtureVenue(raw.homeTeam.name ?? '', raw.awayTeam.name ?? '')?.city ?? matchVenue(raw.id)?.city ?? null,
     homeTeam: normalizeTeam(raw.homeTeam),
     awayTeam: normalizeTeam(raw.awayTeam),
     fullTime: { home: raw.score.fullTime.home, away: raw.score.fullTime.away },
@@ -83,7 +89,10 @@ export async function getMatchesByMatchday(matchday: number): Promise<RawMatches
 
 export async function getAllMatches(): Promise<RawMatchesResponse> {
   return withTtlCache('matches:all', MATCHES_TTL_MS, () =>
-    fetchFootball<RawMatchesResponse>('/competitions/WC/matches', { revalidate: 60 })
+    fetchFootball<RawMatchesResponse>(
+      `/competitions/WC/matches?dateFrom=${TOURNAMENT_START}&dateTo=${TOURNAMENT_END}`,
+      { revalidate: 60 }
+    )
   );
 }
 

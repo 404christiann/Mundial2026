@@ -102,10 +102,10 @@ describe('BracketView → BracketMatch — winner highlighting', () => {
     const rounds = buildBracket([match]);
     render(<BracketView initialRounds={rounds} />);
     const argentinaEl = screen.getByText('Argentina');
-    expect(argentinaEl.className).toContain('winner');
+    expect(argentinaEl.className).toContain('text-yellow-200');
   });
 
-  it('applies "winner" class to the away team when away wins', () => {
+  it('highlights winning team when away wins', () => {
     const match = makeFinishedMatch({
       id: 100,
       stage: 'FINAL',
@@ -118,9 +118,9 @@ describe('BracketView → BracketMatch — winner highlighting', () => {
     const rounds = buildBracket([match]);
     render(<BracketView initialRounds={rounds} />);
     const franceEl = screen.getByText('France');
-    expect(franceEl.className).toContain('winner');
+    expect(franceEl.className).toContain('text-yellow-200');
     const argentinaEl = screen.getByText('Argentina');
-    expect(argentinaEl.className).not.toContain('winner');
+    expect(argentinaEl.className).not.toContain('text-yellow-200');
   });
 
   it('renders fullTime scores for a finished knockout match', () => {

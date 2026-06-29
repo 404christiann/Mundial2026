@@ -131,6 +131,65 @@ const FIXTURE_VENUE: Record<string, { venue: string; city: string }> = {
   'panama|croatia':                   { venue: 'BMO Field',              city: 'Toronto' },
   'panama|england':                   { venue: 'MetLife Stadium',        city: 'East Rutherford' },
   'croatia|ghana':                    { venue: 'Lincoln Financial Field', city: 'Philadelphia' },
+  // Round of 32
+  'south africa|canada':              { venue: 'SoFi Stadium',           city: 'Inglewood' },
+  'brazil|japan':                     { venue: 'NRG Stadium',            city: 'Houston' },
+  'germany|paraguay':                 { venue: 'Gillette Stadium',       city: 'Foxborough' },
+  'netherlands|morocco':              { venue: 'Estadio BBVA',           city: 'Guadalupe' },
+  'ivory coast|norway':               { venue: 'AT&T Stadium',           city: 'Arlington' },
+  'france|sweden':                    { venue: 'MetLife Stadium',        city: 'East Rutherford' },
+  'mexico|ecuador':                   { venue: 'Estadio Azteca',         city: 'Mexico City' },
+  'england|dr congo':                 { venue: 'Mercedes-Benz Stadium',  city: 'Atlanta' },
+  'belgium|senegal':                  { venue: 'Lumen Field',            city: 'Seattle' },
+  'united states|bosnia and herzegovina': { venue: "Levi's Stadium",    city: 'Santa Clara' },
+  'spain|austria':                    { venue: 'SoFi Stadium',           city: 'Inglewood' },
+  'portugal|croatia':                 { venue: 'BMO Field',              city: 'Toronto' },
+  'switzerland|algeria':              { venue: 'BC Place',               city: 'Vancouver' },
+  'australia|egypt':                  { venue: 'AT&T Stadium',           city: 'Arlington' },
+  'argentina|cape verde':             { venue: 'Hard Rock Stadium',      city: 'Miami Gardens' },
+  'colombia|ghana':                   { venue: 'Arrowhead Stadium',      city: 'Kansas City' },
+};
+
+// All knockout fixtures — keyed by football-data.org match ID
+const MATCH_ID_VENUE: Record<number, { venue: string; city: string }> = {
+  // Round of 32
+  537417: { venue: 'SoFi Stadium',            city: 'Inglewood' },
+  537423: { venue: 'NRG Stadium',             city: 'Houston' },
+  537415: { venue: 'Gillette Stadium',        city: 'Foxborough' },
+  537418: { venue: 'Estadio BBVA',            city: 'Guadalupe' },
+  537424: { venue: 'AT&T Stadium',            city: 'Arlington' },
+  537416: { venue: 'MetLife Stadium',         city: 'East Rutherford' },
+  537425: { venue: 'Estadio Azteca',          city: 'Mexico City' },
+  537426: { venue: 'Mercedes-Benz Stadium',   city: 'Atlanta' },
+  537422: { venue: 'Lumen Field',             city: 'Seattle' },
+  537421: { venue: "Levi's Stadium",          city: 'Santa Clara' },
+  537420: { venue: 'SoFi Stadium',            city: 'Inglewood' },
+  537419: { venue: 'BMO Field',               city: 'Toronto' },
+  537429: { venue: 'BC Place',                city: 'Vancouver' },
+  537428: { venue: 'AT&T Stadium',            city: 'Arlington' },
+  537427: { venue: 'Hard Rock Stadium',       city: 'Miami Gardens' },
+  537430: { venue: 'Arrowhead Stadium',       city: 'Kansas City' },
+  // Round of 16
+  537376: { venue: 'NRG Stadium',             city: 'Houston' },
+  537375: { venue: 'Lincoln Financial Field', city: 'Philadelphia' },
+  537377: { venue: 'MetLife Stadium',         city: 'East Rutherford' },
+  537378: { venue: 'Estadio Azteca',          city: 'Mexico City' },
+  537379: { venue: 'AT&T Stadium',            city: 'Arlington' },
+  537380: { venue: 'Lumen Field',             city: 'Seattle' },
+  537381: { venue: 'Mercedes-Benz Stadium',   city: 'Atlanta' },
+  537382: { venue: 'BC Place',                city: 'Vancouver' },
+  // Quarter Finals
+  537383: { venue: 'Gillette Stadium',        city: 'Foxborough' },
+  537384: { venue: 'SoFi Stadium',            city: 'Inglewood' },
+  537385: { venue: 'Hard Rock Stadium',       city: 'Miami Gardens' },
+  537386: { venue: 'Arrowhead Stadium',       city: 'Kansas City' },
+  // Semi Finals
+  537387: { venue: 'AT&T Stadium',            city: 'Arlington' },
+  537388: { venue: 'Mercedes-Benz Stadium',   city: 'Atlanta' },
+  // Third Place
+  537389: { venue: 'Hard Rock Stadium',       city: 'Miami Gardens' },
+  // Final
+  537390: { venue: 'MetLife Stadium',         city: 'East Rutherford' },
 };
 
 export function venueCity(venue: string | null): string | null {
@@ -141,4 +200,8 @@ export function venueCity(venue: string | null): string | null {
 export function fixtureVenue(homeTeam: string, awayTeam: string): { venue: string; city: string } | null {
   const key = `${normalizeTeamKey(homeTeam)}|${normalizeTeamKey(awayTeam)}`;
   return FIXTURE_VENUE[key] ?? null;
+}
+
+export function matchVenue(id: number): { venue: string; city: string } | null {
+  return MATCH_ID_VENUE[id] ?? null;
 }
